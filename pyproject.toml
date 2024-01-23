@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sample-project"
-version = "0.1.0"
+version = "0.0.0.post1.dev0+9785096"
 description = ""
 authors = ["Author Name <author@example.com>"]
 # readme = "README.md"
