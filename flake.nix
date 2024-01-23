@@ -6,7 +6,17 @@
     let
       supportedSystems = [ "x86_64-linux" "x86_64-darwin" "aarch64-linux" "aarch64-darwin" ];
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
-      pkgs = forAllSystems (system: nixpkgs.legacyPackages.${system});
+      overlay = (final: prev: {
+        poetry = prev.poetry.overridePythonAttrs (prev: {
+          propagatedBuildInputs = prev.propagatedBuildInputs ++ [ final.pkgs.python311Packages.poetry-dynamic-versioning ];
+          catchConflicts = false;
+          doCheck = false;
+        });
+      });
+      pkgs = forAllSystems (system: import nixpkgs {
+        inherit system;
+        overlay = [ overlay ];
+      });
     in
     {
       packages = forAllSystems (system:
@@ -20,12 +30,6 @@
       devShells = forAllSystems (system:
         let
           inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = pkgs.${system}; }) mkPoetryEnv;
-          poetry = pkgs.${system}.poetry.overridePythonAttrs (prev: {
-            propagatedBuildInputs = prev.propagatedBuildInputs ++ [ pkgs.${system}.python311Packages.poetry-dynamic-versioning ];
-            catchConflicts = false;
-            doCheck = false;
-          });
-
         in
         {
           default = pkgs.${system}.mkShellNoCC {
